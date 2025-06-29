@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deus Ex Lumen | Enhanced</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* CSS-Variablen für den interaktiven Lichteffekt */
+            --mouse-x: 50%;
+            --mouse-y: 50%;
+        }
+
+        /* --- GRUNDEINSTELLUNGEN --- */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh; /* vh statt % für bessere Kompatibilität */
+            overflow: hidden;
+            font-family: 'Cinzel', serif;
+            background-color: #000;
+            cursor: none; /* Versteckt den Standard-Cursor */
+        }
+
+        /* --- ENHANCEMENT 1: PRE-LOADER --- */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s ease-out;
+        }
+        .loader-symbol {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 215, 0, 0.3);
+            border-radius: 50%;
+            border-top-color: #FFD700;
+            animation: spin 1.5s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* --- VIDEO-HINTERGRUND --- */
+        #video-background {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -100;
+            transform: translateX(-50%) translateY(-50%);
+            object-fit: cover;
+        }
+
+        /* --- ENHANCEMENT 2: SCHWEBENDE PARTIKEL --- */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -50; /* Zwischen Video und Inhalt */
+        }
+
+        /* --- INHALTS-OVERLAY --- */
+        .content-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5); /* Etwas dunkler für mehr Kontrast */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            opacity: 0; /* Wird per JS sichtbar gemacht */
+            transition: opacity 1.5s ease-in;
+        }
+
+        /* --- DER GÖTTLICHE TITEL --- */
+        .title-container {
+            position: relative;
+        }
+
+        h1 {
+            font-size: 6vw;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 0.5rem;
+            text-transform: uppercase;
+            color: #FFD700;
+            text-shadow: 
+                0 0 5px rgba(255, 215, 0, 0.5),
+                0 0 15px rgba(255, 215, 0, 0.5),
+                0 0 30px rgba(255, 215, 0, 0.4),
+                0 0 50px rgba(255, 165, 0, 0.3);
+        }
+
+        /* --- ENHANCEMENT 1 (Forts.): INTERAKTIVER LICHTEFFEKT --- */
+        h1::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(
+                circle 200px at var(--mouse-x) var(--mouse-y),
+                rgba(255, 255, 255, 0.15),
+                transparent
+            );
+            transition: background 0.1s linear;
+            mix-blend-mode: screen; /* Sorgt für einen schönen Aufhell-Effekt */
+        }
+
+        /* --- ENHANCEMENT 3: SOUND-KONTROLLE --- */
+        #sound-control {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 100;
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+        #sound-control:hover {
+            opacity: 1;
+        }
+        #sound-control svg {
+            width: 100%;
+            height: 100%;
+            fill: #FFD700;
+            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.7));
+        }
+        .icon-off { display: none; }
+
+        /* --- ENHANCEMENT 5: SCROLL-HINWEIS --- */
+        #scroll-cue {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            color: rgba(255, 215, 0, 0.5);
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translate(-50%, 0); }
+            40% { transform: translate(-50%, -15px); }
+            60% { transform: translate(-50%, -7px); }
+        }
+
+        /* --- ANPASSUNG FÜR MOBILGERÄTE --- */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 10vw;
+                letter-spacing: 0.2rem;
+            }
+            /* Auf Mobilgeräten interaktive Effekte abschalten */
+            body { cursor: auto; }
+            h1::before { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pre-Loader HTML -->
+    <div id="preloader">
+        <div class="loader-symbol"></div>
+    </div>
+
+    <!-- Hintergrund Video & Partikel -->
+    <video autoplay muted loop playsinline id="video-background">
+        <source src="https://raw.githubusercontent.com/deusexlumen/Deus-media/main/InShot_20250629_142057547_1.mp4" type="video/mp4">
+    </video>
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Hauptinhalt -->
+    <div class="content-overlay">
+        <div class="title-container">
+            <h1>Deus Ex Lumen</h1>
+        </div>
+    </div>
+
+    <!-- Sound-Kontrolle HTML -->
+    <div id="sound-control">
+        <svg class="icon-on" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+        <svg class="icon-off" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+    </div>
+
+    <!-- Scroll-Hinweis HTML -->
+    <div id="scroll-cue">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14m-7-7l7 7 7-7"/></svg>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const preloader = document.getElementById('preloader');
+    const content = document.querySelector('.content-overlay');
+    const video = document.getElementById('video-background');
+    const soundControl = document.getElementById('sound-control');
+    const iconOn = soundControl.querySelector('.icon-on');
+    const iconOff = soundControl.querySelector('.icon-off');
+
+    // --- LOGIK FÜR PRE-LOADER ---
+    // Warte, bis das Video abspielbereit ist
+    video.addEventListener('canplay', () => {
+        preloader.style.opacity = '0';
+        content.style.opacity = '1';
+        // Sorge dafür, dass der Preloader nach der Animation verschwindet
+        setTimeout(() => {
+            preloader.style.display = 'none';
+        }, 1000); // Muss zur CSS transition-duration passen
+    });
+
+    // --- LOGIK FÜR LICHTEFFEKT ---
+    // Aktualisiere die CSS-Variablen bei Mausbewegung
+    document.addEventListener('mousemove', (e) => {
+        document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+        document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+    });
+
+    // --- LOGIK FÜR SOUND-KONTROLLE ---
+    soundControl.addEventListener('click', () => {
+        video.muted = !video.muted;
+        iconOn.style.display = video.muted ? 'none' : 'block';
+        iconOff.style.display = video.muted ? 'block' : 'none';
+    });
+    // Initialer Status
+    iconOn.style.display = 'none';
+    iconOff.style.display = 'block';
+
+    // --- LOGIK FÜR PARTIKEL-CANVAS ---
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let particles = [];
+    const particleCount = 50;
+
+    for (let i = 0; i < particleCount; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 2 + 1,
+            speedY: Math.random() * 0.5 + 0.1,
+            opacity: Math.random() * 0.5 + 0.2
+        });
+    }
+
+    function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+            // Bewegen
+            p.y -= p.speedY;
+            // Wenn Partikel oben rausfliegt, unten neu starten
+            if (p.y < 0) {
+                p.y = canvas.height;
+                p.x = Math.random() * canvas.width;
+            }
+            // Zeichnen
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 215, 0, ${p.opacity})`;
+            ctx.fill();
+        });
+        requestAnimationFrame(animateParticles);
+    }
+
+    animateParticles();
+
+    // Canvas-Größe bei Fensteränderung anpassen
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+});
+</script>
+
+</body>
+</html>
